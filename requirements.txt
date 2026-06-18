@@ -1,0 +1,15 @@
+fastapi==0.115.6
+gTTS==2.5.4
+jsonpatch==1.33
+jsonpointer==3.0.0
+neo4j==6.2.0
+pgvector==0.3.6
+psycopg2-binary==2.9.10
+pydantic==2.10.6
+pydantic_core==2.27.2
+pypdf==6.5.0
+regex==2024.11.6
+requests==2.32.3
+requests-toolbelt==1.0.0
+sentence-transformers==5.2.0
+uvicorn==0.32.1
