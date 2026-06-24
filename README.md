@@ -62,6 +62,12 @@ Start required services:
 * Neo4j
 * Ollama
 
+Then run:
+
+```bash
+python app/main.py
+```
+
 ### 4. Data Migration
 
 After the services are running, ingest legal documents into the databases:
