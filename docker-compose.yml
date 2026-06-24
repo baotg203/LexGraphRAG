@@ -14,6 +14,9 @@ services:
 
   ollama:
     image: ollama/ollama
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
     ports:
       - "11434:11434"
     volumes:
@@ -21,8 +24,10 @@ services:
     entrypoint: >
       sh -c "
         ollama serve &
-        sleep 10 &&
-        ollama pull qwen2.5:7b-instruct &&
+        until ollama list >/dev/null 2>&1; do
+          sleep 2
+        done
+        ollama pull qwen3:4b-instruct
         wait
       "
 
