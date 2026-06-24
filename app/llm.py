@@ -24,23 +24,18 @@ QUY TẮC BẮT BUỘC:
 - CHỈ sử dụng thông tin trong CONTEXT
 - TUYỆT ĐỐI KHÔNG hiển thị CHUNK_ID, số hiệu chunk, hay mã kỹ thuật
 - TUYỆT ĐỐI KHÔNG viết "CHUNK xxx" trong câu trả lời
-- KHÔNG suy đoán ngoài CONTEXT
 
 NGÔN NGỮ BẮT BUỘC:
 - Toàn bộ câu trả lời PHẢI bằng tiếng Việt.
 - Sau khi sinh câu trả lời, PHẢI tự kiểm tra.
 - Nếu phát hiện bất kỳ từ, ký tự, câu nào không phải tiếng Việt
   → PHẢI viết lại đoạn đó bằng tiếng Việt trước khi trả lời.
-- Tuyệt đối không giữ nguyên văn bản tiếng nước ngoài, kể cả trong CONTEXT.
 
 
 CÁCH TRẢ LỜI:
 
 <tối đa 3–4 câu, dễ hiểu, nếu gặp câu trả lời dài thì hãy trả lời dạng liệt kê>
 
-Dẫn chứng: <tên điều luật, KHÔNG ghi số chunk>
-Ví dụ:
-Dẫn chứng: Điều 8 – Luật Hôn nhân và Gia đình 2014
 
 ---
 CONTEXT:
