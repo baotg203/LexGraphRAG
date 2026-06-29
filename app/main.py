@@ -1,63 +1,83 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, StreamingResponse
-from fastapi.templating import Jinja2Templates
+from fastapi.responses import (
+    HTMLResponse,
+    StreamingResponse
+)
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
-from gtts import gTTS
-import io
-from config import THRESHOLD_SIMILARITY
-from app.llm import answer, local_llm
-from app.retriever import retrieve, build_context
+from fastapi.templating import Jinja2Templates
 
-app = FastAPI()
+from app.src.models.chat import (
+    Question,
+    TTSRequest
+)
+from app.src.container import QAContainer
+from app.core.db import get_connection
+from app.core.graph import neo4j_driver
 
-templates = Jinja2Templates(directory="app/templates")
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+conn = get_connection()
+
+container = QAContainer(db=conn, neo4j_driver=neo4j_driver)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    container.close()
 
 
-class Question(BaseModel):
-    question: str
+app = FastAPI(
+    title="Legal Chatbot",
+    lifespan=lifespan
+)
 
-# static files (optional)
+templates = Jinja2Templates(
+    directory="app/templates"
+)
+
+app.mount(
+    "/static",
+    StaticFiles(directory="app/static"),
+    name="static"
+)
+
+
+# ==========================
+# Home
+# ==========================
 
 @app.get("/", response_class=HTMLResponse)
-def home(request: Request):
+async def home(request: Request):
     return templates.TemplateResponse(
         "index.html",
-        {"request": request}
+        {
+            "request": request
+        }
     )
 
+
+# ==========================
+# Chat
+# ==========================
+
 @app.post("/chat")
-def chat(q: Question):
-    res = retrieve(q.question)
-    chunks = res['chunks']
+async def chat(q: Question):
+    return container.chat_service.ask(
+        q.question
+    )
 
-    if not chunks or chunks[0]["similarity"] < THRESHOLD_SIMILARITY:
-        return {
-            "answer": "Nội dung câu hỏi hiện chưa đủ cơ sở pháp lý để đối chiếu với các quy định hiện hành. Vui lòng liên hệ chuyên gia để được tư vấn cụ thể hơn.",
-            "citations": []
-        }
 
-    context_text = build_context(res['chunks'], res['facts'])
-    answer_text = answer(q.question, context_text)
-
-    citations = [{
-        "chunk_id": chunks[0]["chunk_id"],
-        "content": chunks[0]["content"]
-    }]
-
-    return {
-        "answer": answer_text,
-        "citations": citations
-    }
+# ==========================
+# Text To Speech
+# ==========================
 
 @app.post("/tts")
-async def tts(data: dict):
-    text = data["text"]
-    tts = gTTS(text, lang="vi")
+async def tts(data: TTSRequest):
+    audio = container.tts_service.generate(
+        data.text
+    )
 
-    buf = io.BytesIO()
-    tts.write_to_fp(buf)
-    buf.seek(0)
-
-    return StreamingResponse(buf, media_type="audio/mpeg")
+    return StreamingResponse(
+        audio,
+        media_type="audio/mpeg"
+    )
