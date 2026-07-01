@@ -32,20 +32,20 @@ DEVICE = os.getenv("DEVICE", torch.device("cuda" if torch.cuda.is_available() el
 PDF_FOLDER = 'data'
 
 PDF_TEST = {
-    # "datdai2014" : {
-    #     "document_code": "45/2013/QH13",
-    #     "title": "Luật Đất đai",
-    #     "effective_from": "2014-07-01",
-    #     "effective_to": "2024-07-31",
-    #     "category": "DATDAI"
-    # },
-    # "datdai2024": {
-    #     "document_code": "31/2024/QH15",
-    #     "title": "Luật Đất đai",
-    #     "effective_from": "2024-08-01",
-    #     "effective_to": None,
-    #     "category": "DATDAI"
-    # },
+    "datdai2014" : {
+        "document_code": "45/2013/QH13",
+        "title": "Luật Đất đai",
+        "effective_from": "2014-07-01",
+        "effective_to": "2024-07-31",
+        "category": "DATDAI"
+    },
+    "datdai2024": {
+        "document_code": "31/2024/QH15",
+        "title": "Luật Đất đai",
+        "effective_from": "2024-08-01",
+        "effective_to": None,
+        "category": "DATDAI"
+    },
     # "doanhnghiep2020": {
     #     "document_code": "59/2020/QH14",
     #     "title": "Luật Doanh nghiệp",
@@ -76,6 +76,4 @@ PDF_TEST = {
     }
 }
 
-THRESHOLD_SIMILARITY = 0.85
-BATCH_SIZE = 3
-EMBED_BATCH_SIZE = 32
+THRESHOLD_SIMILARITY = 0.5
