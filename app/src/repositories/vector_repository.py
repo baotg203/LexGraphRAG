@@ -9,12 +9,6 @@ class VectorRepository:
         self.db = db
         self.embedding_model = embedding_model
 
-    def embed(self, text: str):
-        return self.embedding_model.embed_query(
-            f"passage: {text}",
-            normalize_embeddings=True
-        )
-
     def semantic_search(
         self,
         query: str,
@@ -22,7 +16,7 @@ class VectorRepository:
         top_k: int = 10,
         prefer_latest: bool = True
     ):
-        embedding = self.embed(query)
+        embedding = self.embedding_model.embed_query(query)
 
         conn = self.db
 
@@ -61,13 +55,13 @@ class VectorRepository:
                 WHERE 1=1
                     {category_condition}
                 ORDER BY
+                    similarity DESC,
                     CASE
                         WHEN d.effective_to IS NULL
                         THEN 1000
                         ELSE 0
                     END DESC,
-                    d.version DESC,
-                    similarity DESC
+                    d.version DESC
                 LIMIT %s
                 """
             else:
