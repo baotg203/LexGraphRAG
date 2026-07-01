@@ -68,20 +68,51 @@ TEXT:
 
     @staticmethod
     def _clean_json(text: str) -> Union[Dict, List, Any]:
+        if not text or not isinstance(text, str):
+            raise ValueError("Input phải là string không rỗng")
+
+        original_text = text
+        text = text.strip()
+
+        # Pre-cleaning mạnh (giúp repair_json chạy nhanh hơn)
+        text = re.sub(r'^```(?:json)?\s*|\s*```$', '', text, flags=re.MULTILINE | re.IGNORECASE)
+        text = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\uFEFF]', '', text)  # control chars
+        text = re.sub(r'\s+', ' ', text)  # normalize whitespace
+
+        # 1. Thử parse chuẩn trước (nhanh nhất)
         try:
-            parsed = repair_json(text)
-            logger.info("✅ JSON parsed successfully")
+            parsed = json.loads(text)
+            logger.info("✅ JSON parsed directly")
             return parsed
-        except json.JSONDecodeError as e:
-            logger.warning(f"JSON parse failed: {e}")
-            try:
-                # One more aggressive attempt
-                cleaned = re.sub(r'-\s*', '', text)   # remove any remaining dashes
-                parsed = json.loads(cleaned)
-                return parsed
-            except json.JSONDecodeError:
-                raise ValueError(
-                    f"JSON parse failed after all fixes.\n"
-                    f"Error: {e}\n"
-                    f"First 800 chars:\n{text[:800]}..."
-                ) from e
+        except json.JSONDecodeError:
+            pass
+
+        # 2. Dùng repair_json (với optimize)
+        try:
+            parsed = repair_json(
+                text, 
+                return_objects=True,      # Quan trọng: nhanh hơn
+                skip_json_loads=True      # Vì đã thử json.loads ở trên
+            )
+            logger.info("✅ JSON repaired successfully")
+            return parsed
+        except Exception as e:
+            logger.warning(f"repair_json failed: {str(e)[:150]}")
+
+        # 3. Aggressive fallback
+        try:
+            cleaned = text
+            cleaned = re.sub(r'-\s*', '', cleaned)                    # stray dashes
+            cleaned = re.sub(r',(\s*[}\]])', r'\1', cleaned)         # trailing comma
+            cleaned = re.sub(r'(\b\w+\b)\s*:', r'"\1":', cleaned)    # unquoted keys (cẩn thận)
+            cleaned = re.sub(r':\s*(\w+)(?=[,}])', r': "\1"', cleaned)  # unquoted values
+
+            parsed = json.loads(cleaned)
+            logger.info("✅ JSON parsed with aggressive cleaning")
+            return parsed
+        except Exception as e2:
+            raise ValueError(
+                f"Không parse được JSON sau tất cả các cách.\n"
+                f"Error: {e2}\n"
+                f"First 800 ký tự:\n{original_text[:800]}..."
+            ) from e2

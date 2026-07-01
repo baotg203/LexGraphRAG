@@ -181,29 +181,18 @@ class GraphRepository:
                     )
                     {category_condition}
 
-                    MATCH (law)
-                        -[:HAS_VERSION]->
-                        (ver:LawVersion)
-
-                    WHERE ver.is_active = true
-                       OR ver.effective_to IS NULL
-
-                    MATCH (ver)
-                        -[:CONTAINS]->
-                        (art:Article)
-
-                    MATCH (art)
-                        -[:HAS_CHUNK]->
-                        (c:Chunk)
+                    MATCH (law)-[:HAS_VERSION]->(ver:LawVersion)
+                    MATCH (ver)-[:CONTAINS]->(art:Article)
+                    MATCH (art)-[:HAS_CHUNK]->(c:Chunk)
 
                     RETURN
-                        c.chunk_id as chunk_id,
-                        art.content as content,
-                        law.title as title,
-                        ver.version as version,
-                        ver.effective_from as effective_from,
-                        law.document_code as document_code,
-                        0.88 as similarity
+                        c.chunk_id AS chunk_id,
+                        c.content AS content,
+                        art.article_number AS article_number,
+                        art.content AS article_content,
+                        law.title AS title,
+                        law.document_code AS document_code,
+                        ver.version AS version
 
                     ORDER BY ver.version DESC
                     LIMIT $top_k
@@ -213,11 +202,39 @@ class GraphRepository:
                     top_k=top_k
                 )
 
-                return [
-                    record.data()
-                    for record in result
-                ]
+                return [r.data() for r in result]
 
         except Exception as e:
             print(f"Neo4j error: {e}")
+            return []
+        
+    def expand_chunk(self, chunk_id):
+        try:
+            with self.driver.session() as session:
+                result = session.run(
+                    """
+                    MATCH (c:Chunk)
+                    WHERE c.chunk_id = $chunk_id
+
+                    MATCH (art:Article)-[:HAS_CHUNK]->(c)
+                    MATCH (ver:LawVersion)-[:CONTAINS]->(art)
+                    MATCH (law:Law)-[:HAS_VERSION]->(ver)
+
+                    OPTIONAL MATCH (art)-[:HAS_CHUNK]->(c2:Chunk)
+
+                    RETURN
+                        c2.chunk_id AS chunk_id,
+                        c2.content AS content,
+                        art.content AS article_content,
+                        law.title AS law_title,
+                        ver.version AS version,
+                        law.document_code AS document_code
+                    """,
+                    chunk_id=str(chunk_id)
+                )
+
+                return [r.data() for r in result]
+
+        except Exception as e:
+            print(f"Neo4j expand error: {e}")
             return []

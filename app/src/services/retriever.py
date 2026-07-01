@@ -20,75 +20,67 @@ class RetrieverService:
         category=None,
         top_k=10,
         use_llm_rerank=False,
-        rerank_top_k=5
+        rerank_top_k=3
     ):
-        pg_results = (
-            self.vector_repository
-            .semantic_search(
-                query=query,
-                category=category,
-                top_k=top_k * 2
-            )
+        # =========================
+        # 1. VECTOR RETRIEVAL (MAIN)
+        # =========================
+        pg_results = self.vector_repository.semantic_search(
+            query=query,
+            category=category,
+            top_k=top_k
         )
 
-        print(f"Postgres results: {len(pg_results)}")
+        combined = {}
+        seen = set()            
 
-        neo_results = (
-            self.graph_repository
-            .retrieve_latest(
-                category=category,
-                top_k=top_k
-            )
-        )
-
-        print(f"Neo4j results: {len(neo_results)}")
-
-        combined = []
-        seen = set()
-
+        # add PG results first (HIGH PRIORITY)
         for row in pg_results:
-            content = row["content"]
+            cid = row.get("chunk_id") or row.get("id") or row.get("content")
 
-            if content in seen:
+            if cid in seen:
                 continue
 
             row["source"] = "postgres"
+            combined[cid] = row
+            seen.add(cid)
 
-            combined.append(row)
-            seen.add(content)
+        # =========================
+        # 2. OPTIONAL RERANK
+        # =========================
 
-        for row in neo_results:
-            content = row["content"]
+        if use_llm_rerank and self.rerank_service and len(pg_results) > 3:
+            pg_results = self.rerank_service.rerank(
+                query=query,
+                results=pg_results,
+                top_k=rerank_top_k
+            )
 
-            if content in seen:
+        # =========================
+        # 3. GRAPH EXPANSION (NEO4J)
+        # =========================
+        neo_results = []
+
+        for row in pg_results:
+            chunk_id = row.get("chunk_id")
+
+            if not chunk_id:
                 continue
 
-            row["source"] = "neo4j"
+            expanded = self.graph_repository.expand_chunk(chunk_id)
+            neo_results.extend(expanded)
 
-            combined.append(row)
-            seen.add(content)
+        for row in neo_results:
+            cid = row.get("chunk_id")
 
-        combined.sort(
-            key=lambda x: (
-                1 if x.get("effective_to") is None else 0,
-                x.get("version", 0),
-                x.get("similarity", 0)
-            ),
-            reverse=True
-        )
+            if not cid or cid in seen:
+                continue
 
-        results = combined[:top_k]
+            row["source"] = "neo4j_expansion"
+            combined[cid] = row
+            seen.add(cid)
 
-        if (
-            use_llm_rerank
-            and self.rerank_service
-            and len(results) > 3
-        ):
-            return self.rerank_service.rerank(
-                query,
-                results,
-                rerank_top_k
-            )
-        print('='*50)
-
-        return results
+        # =========================
+        # 3. FINAL LIST
+        # =========================
+        return list(combined.values())[:top_k]

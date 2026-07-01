@@ -1,6 +1,6 @@
 class ChunkRepository:
     def __init__(self, cur):
-        self.cur = cur.cursor()
+        self.cur = cur
 
     def insert(self, chunk):
         self.cur.execute("""

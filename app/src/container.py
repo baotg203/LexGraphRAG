@@ -23,6 +23,7 @@ from app.src.services.context import ContextService
 
 from config import DEVICE
 from app.core.embedding import EMBEDDING_MODELS
+from app.core.rerank import RERANK_MODEL
 
 class IngestionContainer:
     def __init__(
@@ -135,7 +136,7 @@ class QAContainer:
         self.llm_service = LLMService()
 
         self.rerank_service = RerankService(
-            self.llm_service
+            model=RERANK_MODEL
         )
 
         self.retriever_service = RetrieverService(

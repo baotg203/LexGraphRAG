@@ -15,7 +15,7 @@ class ChatService:
     def ask(self, question: str):
         results = self.retriever_service.retrieve(
             query=question,
-            use_llm_rerank=False
+            use_llm_rerank=True
         )
 
         if not results:

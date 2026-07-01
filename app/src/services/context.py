@@ -20,9 +20,7 @@ class ContextService:
 
             contexts.append(
                 f"""
-                ĐIỀU {i} - {version}
                 Tiêu đề: {chunk.get('title', '')}
-                Nguồn: {chunk.get('source', 'postgres').upper()}
 
                 {chunk.get('content', '')}
                 {'-' * 80}
