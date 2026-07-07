@@ -50,6 +50,7 @@ class LLMService:
     - CHỈ sử dụng thông tin trong CONTEXT
     - TUYỆT ĐỐI KHÔNG hiển thị CHUNK_ID, số hiệu chunk, hay mã kỹ thuật
     - TUYỆT ĐỐI KHÔNG viết "CHUNK xxx" trong câu trả lời
+    - CÓ THỂ SỬ DỤNG CÁC THÔNG TIN TRONG QUAN HỆ PHÁP LÝ LIÊN QUAN ĐỂ HỖ TRỢ CÂU TRẢ LỜI
 
     NGÔN NGỮ BẮT BUỘC:
     - Toàn bộ câu trả lời PHẢI bằng tiếng Việt.
