@@ -2,8 +2,8 @@ from sentence_transformers import SentenceTransformer
 
 
 class EmbeddingService:
-    def __init__(self, model_id: str, device: str):
-        self.model = SentenceTransformer(model_id, device=device)
+    def __init__(self, model_id: str, device: str, trust_remote_code: bool = False):
+        self.model = SentenceTransformer(model_id, device=device, trust_remote_code=trust_remote_code)
 
     def embed_passage(
         self,
@@ -25,10 +25,7 @@ class EmbeddingService:
         """
         Sinh embedding cho query.
         """
-        return self.model.encode(
-            f"query: {query}",
-            normalize_embeddings=normalize_embeddings
-        ).tolist()
+        return self.model.encode(query, normalize_embeddings=normalize_embeddings).tolist()
 
     def embed_passages(
         self,

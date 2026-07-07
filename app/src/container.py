@@ -59,7 +59,8 @@ class IngestionContainer:
 
         self.embedding_service = EmbeddingService(
             model_id=EMBEDDING_MODELS['vi'],
-            device=DEVICE
+            device=DEVICE,
+            trust_remote_code=True
         )
 
         self.triple_repo = (
@@ -114,7 +115,8 @@ class QAContainer:
 
         self.embedding_service = EmbeddingService(
             model_id=EMBEDDING_MODELS['vi'],
-            device=DEVICE
+            device=DEVICE,
+            trust_remote_code=True
         )
 
         self.vector_repository = VectorRepository(
