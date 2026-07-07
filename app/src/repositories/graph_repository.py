@@ -238,3 +238,31 @@ class GraphRepository:
         except Exception as e:
             print(f"Neo4j expand error: {e}")
             return []
+        
+    def get_chunk_relationships(self, chunk_id):
+        try:
+            with self.driver.session() as session:
+                result = session.run(
+                    """
+                    MATCH (c:Chunk {chunk_id: $chunk_id})
+                        <-[:SUPPORTED_BY]-
+                        (f:LegalFact)
+
+                    OPTIONAL MATCH (s:Entity)-[:SUBJECT_OF]->(f)
+                    OPTIONAL MATCH (f)-[:OBJECT_OF]->(o:Entity)
+
+                    RETURN
+                        f.subject AS subject,
+                        f.predicate AS predicate,
+                        f.object AS object,
+                        s.name AS subject_entity,
+                        o.name AS object_entity
+                    """,
+                    chunk_id=str(chunk_id)
+                )
+
+                return [record.data() for record in result]
+
+        except Exception as e:
+            print(f"Neo4j relationship error: {e}")
+            return []
