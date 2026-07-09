@@ -27,6 +27,15 @@ OLLAMA_CONFIG = {
     "model": os.getenv("OLLAMA_MODEL", "qwen3:4b-instruct")
 }
 
+REDIS_CONFIG = {
+    "host": os.getenv("REDIS_HOST", "localhost"),
+    "port": int(os.getenv("REDIS_PORT", 6379)),
+    "db": int(os.getenv("REDIS_DB", 0)),
+    "password": os.getenv("REDIS_PASSWORD", None),
+    "session_ttl": int(os.getenv("REDIS_SESSION_TTL", 86400)),  # Time-to-live for session data in seconds
+    "max_connections": int(os.getenv("REDIS_MAX_CONNECTIONS", 3))  # Maximum number of connections in the pool
+}
+
 DEVICE = os.getenv("DEVICE", torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
 PDF_FOLDER = 'data'

@@ -1,3 +1,13 @@
+const SESSION_KEY = "chat_session_id";
+
+function getSessionId() {
+  return localStorage.getItem(SESSION_KEY);
+}
+
+function setSessionId(sessionId) {
+  localStorage.setItem(SESSION_KEY, sessionId);
+}
+
 async function send() {
   const input = document.getElementById("question");
   const chat = document.getElementById("chat-box");
@@ -31,10 +41,17 @@ async function send() {
   const res = await fetch("/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question: q })
+    body: JSON.stringify({ 
+      question: q,
+      session_id: getSessionId()
+     })
   });
 
   const data = await res.json();
+
+  if (data.session_id) {
+    setSessionId(data.session_id);
+  }
 
   // 🔥 THAY THẾ loading = answer
   renderBotAnswer(bot, data);

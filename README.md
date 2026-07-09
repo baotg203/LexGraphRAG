@@ -16,33 +16,17 @@ Neo4j Knowledge Graph for relationship-based retrieval
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/your-username/LexGraphRAG.git
+git clone https://github.com/baotg203/LexGraphRAG.git
 cd LexGraphRAG
 ```
 
 ### 2. Create Environment File
 
-Create a `.env` file in the project root:
-
-```env
-DB_HOST=psql_host
-DB_PORT=psql_port
-DB_NAME=psql_name
-DB_USER=psql_user
-DB_PASSWORD=lsql_pass
-
-NEO4J_URI=bolt://neo4j_host:7687
-NEO4J_USER=neo4j_user
-NEO4J_PASSWORD=neo4j_pass
-
-OLLAMA_HOST=http://ollama_host
-OLLAMA_PORT=ollama_port
-OLLAMA_MODEL=ollama_model
+```bash
+cp .env.example .env
 ```
 
 ### 3. Configure Deployment Environment
-
-#### Docker Deployment
 
 ```bash
 docker compose up -d --build
@@ -65,7 +49,13 @@ Start required services:
 Then run:
 
 ```bash
-python app/main.py
+uvicorn app.main:app --host 0.0.0.0 --port 8001
+```
+
+And service run on
+
+```bash
+localhost:8001
 ```
 
 ### 4. Data Migration
