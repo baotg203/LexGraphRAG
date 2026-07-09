@@ -15,6 +15,7 @@ from app.src.models.chat import (
 from app.src.container import QAContainer
 from app.core.db import get_connection
 from app.core.graph import neo4j_driver
+from app.utils.id_generator import generate_session_id
 
 conn = get_connection()
 
@@ -62,10 +63,17 @@ async def home(request: Request):
 
 @app.post("/chat")
 async def chat(q: Question):
-    return container.chat_service.ask(
-        q.question
+
+    session_id = q.session_id or generate_session_id()
+
+    answer = container.chat_service.ask(
+        question=q.question,
+        session_id=session_id
     )
 
+    answer["session_id"] = session_id
+
+    return answer
 
 # ==========================
 # Text To Speech

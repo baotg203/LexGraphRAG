@@ -2,11 +2,31 @@ class ContextService:
     def __init__(self):
         pass
 
-    def build_context(self, results: list[dict]) -> str:
+    def format_history(self, history, max_turns=3):
+        if not history:
+            return "Không có."
+
+        history = history[-max_turns * 2:]
+
+        lines = []
+
+        for msg in history:
+            role = "User" if msg["role"] == "user" else "Assistant"
+            lines.append(f"{role}: {msg['content']}")
+
+        return "\n".join(lines)
+
+    def build_context(self, results: list[dict], history) -> str:
         if not results:
             return ""
 
         contexts = []
+        contexts.append(
+            f"""
+            [Lịch sử hội thoại]
+            {self.format_history(history)}
+            """.strip()
+        )
 
         for i, chunk in enumerate(results, start=1):
             version = f"Version {chunk.get('version', 'N/A')}"

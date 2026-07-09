@@ -64,6 +64,17 @@ services:
       - neo4j_import:/import
     restart: unless-stopped
 
+  redis:
+    image: redis/redis-stack-server:latest
+    container_name: chatbot-redis
+    restart: unless-stopped
+
+    ports:
+      - "6379:6379"
+
+    volumes:
+      - redis_data:/data
+
 volumes:
   ollama:
   postgres_data:
@@ -71,3 +82,4 @@ volumes:
   neo4j_logs:
   neo4j_plugins:
   neo4j_import:
+  redis_data:

@@ -5,7 +5,7 @@ from app.src.repositories.triple_repository import TripleRepository
 from app.src.repositories.graph_repository import GraphRepository
 from app.src.repositories.vector_repository import VectorRepository
 from app.src.repositories.chunk_repository import ChunkRepository
-
+from app.src.repositories.semantic_cache_repository import SemanticCacheRepository
 
 from app.src.services.triple import TripleService
 from app.src.services.pdf_service import PdfService
@@ -20,10 +20,15 @@ from app.src.services.retriever import RetrieverService
 from app.src.services.tts import TTSService
 from app.src.services.rerank import RerankService
 from app.src.services.context import ContextService
+from app.src.services.memory import MemoryService
+from app.src.services.semantic_cache import SemanticCacheService
+
+from app.utils.context_signature import ContextSignature
 
 from config import DEVICE
 from app.core.embedding import EMBEDDING_MODELS
 from app.core.rerank import RERANK_MODEL
+from app.core.redis import RedisClient
 
 class IngestionContainer:
     def __init__(
@@ -108,7 +113,8 @@ class IngestionContainer:
 class QAContainer:
     def __init__(self, db, neo4j_driver):
         self.db = db
-        self.neo4j_driver = neo4j_driver        
+        self.neo4j_driver = neo4j_driver
+        self.redis = RedisClient.get_client(decode_responses=False)
         # =====================
         # Repositories
         # =====================
@@ -131,6 +137,12 @@ class QAContainer:
         self.chunk_repository = ChunkRepository(
             cur=self.db
         )
+        
+        self.semantic_cache_repository = (
+            SemanticCacheRepository(
+                self.redis
+            )
+        )
 
         # =====================
         # Services
@@ -149,10 +161,27 @@ class QAContainer:
 
         self.context_service = ContextService()
 
+        self.memory_service = MemoryService()
+
+        self.semantic_cache_service = (
+            SemanticCacheService(
+                repository=
+                    self.semantic_cache_repository,
+
+                embedding_service=
+                    self.embedding_service
+            )
+        )
+
+        self.context_signature = ContextSignature()
+
         self.chat_service = ChatService(
             retriever_service=self.retriever_service,
             context_service=self.context_service,
-            llm_service=self.llm_service
+            llm_service=self.llm_service,
+            memory_service=self.memory_service,
+            semantic_cache_service=self.semantic_cache_service,
+            context_signature=self.context_signature
         )
 
         self.tts_service = TTSService()
