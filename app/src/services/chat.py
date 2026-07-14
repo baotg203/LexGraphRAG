@@ -9,7 +9,8 @@ class ChatService:
         llm_service,
         memory_service,
         semantic_cache_service,
-        context_signature
+        context_signature,
+        rewrite_service
     ):
         self.retriever_service = retriever_service
         self.context_service = context_service
@@ -17,6 +18,7 @@ class ChatService:
         self.memory_service = memory_service
         self.semantic_cache_service = semantic_cache_service
         self.context_signature = context_signature
+        self.rewrite_service = rewrite_service
 
     def ask(self, question: str, session_id):
         results = self.retriever_service.retrieve(
@@ -24,14 +26,31 @@ class ChatService:
             use_llm_rerank=True
         )
 
-        if not results or results[0].get("similarity", 0) < THRESHOLD_SIMILARITY:
-            return {
-                "answer":
-                    "Nội dung câu hỏi hiện chưa đủ cơ sở pháp lý để đối chiếu với các quy định hiện hành. Vui lòng liên hệ chuyên gia để được tư vấn cụ thể hơn.",
-                "citations": []
-            }
-        
         history = self.memory_service.get_history(session_id)
+
+        if not results or results[0].get("similarity", 0) < THRESHOLD_SIMILARITY:
+
+            rewrite_question = None
+
+            is_followup = self.rewrite_service.is_followup(
+                query=question,
+                history=history
+            )
+            
+            if history and is_followup:
+                rewrite_question = self.rewrite_service.rewrite(
+                    query=question,
+                    history=history
+                )
+                question = rewrite_question
+            
+            if not rewrite_question or rewrite_question == "Câu hỏi không liên quan đến chủ đề pháp luật.":
+                return {
+                    "answer":
+                        "Nội dung câu hỏi hiện chưa đủ cơ sở pháp lý để đối chiếu với các quy định hiện hành. Vui lòng liên hệ chuyên gia để được tư vấn cụ thể hơn.",
+                    "citations": []
+                }
+            
 
         context_signature = (
             self.context_signature
