@@ -11,6 +11,12 @@ Neo4j Knowledge Graph for relationship-based retrieval
 🌐 FastAPI backend for API services
 📚 Legal document chunking and indexing pipeline
 
+## Overall Architecture
+
+See the detailed architecture diagram here:
+
+👉 [System Architecture](docs/OverallSystemArchitecture.md)
+
 ## Quick Start
 
 ### 1. Clone Repository
