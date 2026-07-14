@@ -22,6 +22,7 @@ from app.src.services.rerank import RerankService
 from app.src.services.context import ContextService
 from app.src.services.memory import MemoryService
 from app.src.services.semantic_cache import SemanticCacheService
+from app.src.services.rewriting import RewriteService
 
 from app.utils.context_signature import ContextSignature
 
@@ -175,13 +176,18 @@ class QAContainer:
 
         self.context_signature = ContextSignature()
 
+        self.rewrite_service = RewriteService(
+            llm_service=self.llm_service
+        )
+
         self.chat_service = ChatService(
             retriever_service=self.retriever_service,
             context_service=self.context_service,
             llm_service=self.llm_service,
             memory_service=self.memory_service,
             semantic_cache_service=self.semantic_cache_service,
-            context_signature=self.context_signature
+            context_signature=self.context_signature,
+            rewrite_service=self.rewrite_service
         )
 
         self.tts_service = TTSService()
